@@ -77,7 +77,7 @@ module.exports = (robot) ->
   robot.respond /gif( me)? (.*)/i, (msg) ->
     query = msg.match[2] || null
     if query
-      url = "https://imgur.com/search/score/all?q_type=anigif&q_all=#{query}"
+      url = "https://imgur.com/search/score/all?q_not=nsfw&q_type=anigif&q_all=#{query}"
       msg.http(url).get() (err, res, body) ->
         if res.statusCode is 200
           image_urls = []
@@ -92,3 +92,22 @@ module.exports = (robot) ->
           msg.send "error: #{url} returned #{res.statusCode}"
     else
       msg.send "Search query is required for this command."
+
+  robot.respond /image( me)? (.*)/i, (msg) ->
+      query = msg.match[2] || null
+      if query
+        url = "https://imgur.com/search/score/all?q_not=nsfw&q_type=jpg&q_all=#{query}"
+        msg.http(url).get() (err, res, body) ->
+          if res.statusCode is 200
+            image_urls = []
+            $(body).find('.cards .post a>img').each((i, elem) ->
+              url = $(elem).attr('src')[..-6]
+              image_urls.push("https:#{url}.jpg") if image_urls.length < 5)
+            if image_urls
+              msg.send random_choice(image_urls)
+            else
+              msg.send "no gifs found for #{query}"
+          else
+            msg.send "error: #{url} returned #{res.statusCode}"
+      else
+        msg.send "Search query is required for this command."
